@@ -1,44 +1,21 @@
-# Spider-Gazelle Application Template
+# Imagine, an AI video monitoring framework
 
-[![CI](https://github.com/spider-gazelle/spider-gazelle/actions/workflows/ci.yml/badge.svg)](https://github.com/spider-gazelle/spider-gazelle/actions/workflows/ci.yml)
+Imagine is a crystal lang web platform for AI processing and monitoring video streams.
 
-Clone this repository to start building your own spider-gazelle based application.
-This is a template and as such, Do What the Fuck You Want To
+* takes UDP H.264 video streams as input (needs to be web compatible format)
+* runs frames through [TensorFlow Lite](https://tfhub.dev/s?deployment-format=lite) models
+* outputs detection data to a websocket and optionally a Redis channel
+  * detection coordinates only
+  * optionally the PNG image (websocket only)
+  * optionally the PNG image with markup applied (websocket only)
+* grabs segments from the video stream and makes it available as MPEG-DASH for browser viewing
+  * this will be pushed to a local volume for serving
+  * and optionally can be pushed to a S3 for serving video at scale
+
+This is intended to run independently of any applications that make use of the output. KISS
 
 ## Documentation
 
-Detailed documentation and guides available: https://spider-gazelle.net/
+Use the provided docker-compose to launch the application.
 
-* [Action Controller](https://github.com/spider-gazelle/action-controller) base class for building [Controllers](http://guides.rubyonrails.org/action_controller_overview.html)
-* [Active Model](https://github.com/spider-gazelle/active-model) base class for building [ORMs](https://en.wikipedia.org/wiki/Object-relational_mapping)
-* [Habitat](https://github.com/luckyframework/habitat) configuration and settings for Crystal projects
-* [router.cr](https://github.com/tbrand/router.cr) base request handling
-* [Radix](https://github.com/luislavena/radix) Radix Tree implementation for request routing
-* [HTTP::Server](https://crystal-lang.org/api/latest/HTTP/Server.html) built-in Crystal Lang HTTP server
-  * Request
-  * Response
-  * Cookies
-  * Headers
-  * Params etc
-
-
-Spider-Gazelle builds on the amazing performance of **router.cr** [here](https://github.com/tbrand/which_is_the_fastest).:rocket:
-
-
-## Testing
-
-`crystal spec`
-
-* to run in development mode `crystal ./src/app.cr`
-
-## Compiling
-
-`crystal build ./src/app.cr`
-
-### Deploying
-
-Once compiled you are left with a binary `./app`
-
-* for help `./app --help`
-* viewing routes `./app --routes`
-* run on a different port or host `./app -b 0.0.0.0 -p 80`
+It's not intended to be public facing as it will not scale (without wasting a lot processing power) but is designed so that it can be used in scalable applications. Obviously works fine as a frontend for your personal Raspberry Pi projects.

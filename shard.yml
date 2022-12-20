@@ -1,11 +1,21 @@
-name: spider-gazelle
-version: 2.0.0
+name: imagine
+version: 1.0.0
 
 dependencies:
   # The server framework
   action-controller:
     github: spider-gazelle/action-controller
     version: ~> 5.5
+
+  # Video stream parsing
+  ffmpeg:
+    github: spider-gazelle/ffmpeg
+    version: ~> 0.3
+
+  # Load and run pre-built neural nets for image recognition
+  tensorflow_lite:
+    github: spider-gazelle/tensorflow_lite
+    version: ~> 0.9
 
 development_dependencies:
   ameba:

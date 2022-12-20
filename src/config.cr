@@ -32,17 +32,6 @@ ActionController::Server.before(
   HTTP::CompressHandler.new
 )
 
-# Optional support for serving of static assests
-if File.directory?(App::STATIC_FILE_PATH)
-  # Optionally add additional mime types
-  ::MIME.register(".yaml", "text/yaml")
-
-  # Check for files if no paths matched in your application
-  ActionController::Server.before(
-    ::HTTP::StaticFileHandler.new(App::STATIC_FILE_PATH, directory_listing: false)
-  )
-end
-
 # Configure session cookies
 # NOTE:: Change these from defaults
 ActionController::Session.configure do |settings|

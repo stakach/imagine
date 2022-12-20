@@ -6,3 +6,4 @@ app
 *.dwarf
 bin
 .DS_Store
+libtensorflowlite_c.so

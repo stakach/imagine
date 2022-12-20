@@ -4,10 +4,10 @@ Imagine is a crystal lang web platform for AI processing and monitoring video st
 
 * takes UDP H.264 video streams as input (needs to be web compatible format)
 * runs frames through [TensorFlow Lite](https://tfhub.dev/s?deployment-format=lite) models
-* outputs detection data to a websocket and optionally a Redis channel
+* outputs detection data to a websocket and optionally a Redis channel or webhook
   * detection coordinates only
-  * optionally the PNG image (websocket only)
-  * optionally the PNG image with markup applied (websocket only)
+  * optionally the PNG image (websocket and webhook)
+  * optionally the PNG image with markup applied (websocket and webhook)
 * grabs segments from the video stream and makes it available as MPEG-DASH for browser viewing
   * this will be pushed to a local volume for serving
   * and optionally can be pushed to a S3 for serving video at scale

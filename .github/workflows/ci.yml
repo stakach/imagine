@@ -1,7 +1,6 @@
 name: CI
 on:
   push:
-  pull_request:
   workflow_dispatch:
   schedule:
     - cron: "0 6 * * 1"
@@ -10,18 +9,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        experimental: [false]
         os: [ubuntu-latest]
         crystal:
           - latest
-          - nightly
+        include:
+          - experimental: true
+            os: ubuntu-latest
+            crystal: nightly
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
     container: crystallang/crystal:${{ matrix.crystal }}-alpine
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+    - name: Install build deps
+      run: |
+        apk add --update --no-cache ffmpeg-libs ffmpeg-dev
     - name: Install dependencies
-      run: shards install --ignore-crystal-version
-    - name: Lint
-      run: ./bin/ameba
+      run: shards install --ignore-crystal-version --skip-postinstall --skip-executables
     - name: Format
       run: crystal tool format --check
     - name: Run tests

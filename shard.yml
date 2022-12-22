@@ -10,7 +10,7 @@ dependencies:
   # Video stream parsing
   ffmpeg:
     github: spider-gazelle/ffmpeg
-    version: ~> 0.3
+    version: ~> 0.4
 
   # Load and run pre-built neural nets for image recognition
   tensorflow_lite:

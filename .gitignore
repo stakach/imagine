@@ -7,3 +7,6 @@ app
 bin
 .DS_Store
 libtensorflowlite_c.so
+tflite_conversions
+*.tflite
+*.mp4

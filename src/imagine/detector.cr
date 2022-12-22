@@ -1,10 +1,10 @@
 require "./model_adaptor"
-require "stumpy_png"
+require "stumpy_core"
 require "ffmpeg"
 require "./fps"
 
 class Imagine::Detector
-  def initialize(@input : URI, @model : ModelAdaptor)
+  def initialize(@input : URI | Path, @model : ModelAdaptor)
   end
 
   # State of detector, stream might not always be available
@@ -13,16 +13,18 @@ class Imagine::Detector
   getter? processing : Bool = false
   getter? error : Bool = false
   getter last_error : Exception? = nil
-  @fps : FPS = FPS.new
+  getter fps : FPS = FPS.new
 
   # video and NN model processing
-  getter input : URI
+  getter input : URI | Path
   @video : FFmpeg::Video? = nil
   getter model : ModelAdaptor
   getter frame : StumpyCore::Canvas? = nil
   @channel : Channel(StumpyCore::Canvas)? = nil
 
   def detections
+    @fps = FPS.new
+
     invocation = 0
     @state_mutex.synchronize do
       raise "already processing" if processing?
@@ -51,7 +53,6 @@ class Imagine::Detector
 
   def stop
     @state_mutex.synchronize { @processing = false }
-    @fps : FPS = FPS.new
   end
 
   protected def process_video(invocation, input_width, input_height) : Nil
@@ -61,7 +62,7 @@ class Imagine::Detector
     end
 
     # we capture as fast as we can, we just skip running detections if they cant keep up
-    @video = video = FFmpeg::Video::UDP.new(@input)
+    @video = video = FFmpeg::Video.open(@input)
     video.each_frame(input_width, input_height) do |canvas, _key_frame|
       @error = false
       @frame = canvas

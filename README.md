@@ -19,3 +19,8 @@ This is intended to run independently of any applications that make use of the o
 Use the provided docker-compose to launch the application.
 
 It's not intended to be public facing as it will not scale (without wasting a lot processing power) but is designed so that it can be used in scalable applications. Obviously works fine as a frontend for your personal Raspberry Pi projects.
+
+### Converting TF Models for use
+
+* List of [pre-built detection models](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2_detection_zoo.md)
+* guide for converting these models to [run on TF Lite](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/running_on_mobile_tf2.md)

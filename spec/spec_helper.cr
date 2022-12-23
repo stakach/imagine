@@ -3,9 +3,13 @@ require "http/client"
 require "../src/imagine"
 require "../src/imagine/models/example_object_detection"
 
+Spec.before_suite do
+  Log.setup(:trace)
+end
+
 SPEC_VIDEO_FILE = Path.new "./test.mp4"
 SPEC_TF_L_MODEL = Path.new "./mobilenet_v1.tflite"
-# SPEC_TF_L_MODEL = Path.new "./tflite_conversions/efficient.tflite"
+# SPEC_TF_L_MODEL = Path.new "./tflite_conversions/efficientdet_lite3x_640_ptq.tflite"
 
 unless File.exists? SPEC_VIDEO_FILE
   puts "downloading video file..."

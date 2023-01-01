@@ -2,11 +2,6 @@ name: imagine
 version: 0.1.0
 
 dependencies:
-  # The server framework
-  action-controller:
-    github: spider-gazelle/action-controller
-    version: ~> 5.5
-
   # Video stream parsing
   ffmpeg:
     github: spider-gazelle/ffmpeg

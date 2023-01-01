@@ -43,6 +43,7 @@ class Imagine::Detector
     while @processing && invocation == @processing_count
       @channel = channel
       canvas = channel.receive
+      @fps.reset if @fps.operations.zero?
       detections = nn_model.process(canvas)
       @fps.increment
       yield(canvas, detections) unless detections.empty?
@@ -76,6 +77,7 @@ class Imagine::Detector
     end
   rescue error
     # stream probably not online, we'll just keep retrying
+    Log.trace(exception: error) { "error extracting frame" }
     @last_error = error
     @error = true
     sleep 2

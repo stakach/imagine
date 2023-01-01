@@ -1,5 +1,5 @@
 name: imagine
-version: 1.0.0
+version: 0.1.0
 
 dependencies:
   # The server framework
@@ -20,10 +20,3 @@ dependencies:
 development_dependencies:
   ameba:
     github: veelenga/ameba
-  hot_topic:
-    github: jgaskins/hot_topic
-
-# compile target
-targets:
-  app:
-    main: src/app.cr

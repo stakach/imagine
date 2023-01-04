@@ -1,0 +1,14 @@
+[Unit]
+Description=Camera Broadcast
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=imagine
+ExecStart=libcamera-vid -t 0 --width 2028 --height 1080 --inline --vflip --flush --listen -o udp://224.1.1.1:8554
+
+[Install]
+WantedBy=multi-user.target

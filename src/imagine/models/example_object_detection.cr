@@ -1,11 +1,15 @@
-require "tensorflow_lite"
+require "tensorflow_lite/edge_tpu"
 require "../../imagine"
 
 # TF Lite Example Application
 # https://www.tensorflow.org/lite/examples/object_detection/overview
 class Imagine::Model::ExampleObjectDetection < Imagine::ModelAdaptor
   def initialize(model : Path, labels : Hash(Int32, String)? = nil)
-    @client = TensorflowLite::Client.new(model)
+    delegate = if TensorflowLite::EdgeTPU.devices.size > 0
+      TensorflowLite::EdgeTPU.devices[0].to_delegate
+    end
+
+    @client = TensorflowLite::Client.new(model, delegate: delegate)
     @labels = labels ? labels : TFLite::ExtractLabels.from(model) || {} of Int32 => String
     Log.warn { "no labels found for model at #{model}, results may not be useful" } if @labels.empty?
   end

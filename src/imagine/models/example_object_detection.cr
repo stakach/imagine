@@ -4,9 +4,11 @@ require "../../imagine"
 # TF Lite Example Application
 # https://www.tensorflow.org/lite/examples/object_detection/overview
 class Imagine::Model::ExampleObjectDetection < Imagine::ModelAdaptor
-  def initialize(model : Path, labels : Hash(Int32, String)? = nil)
-    delegate = if TensorflowLite::EdgeTPU.devices.size > 0
-      TensorflowLite::EdgeTPU.devices[0].to_delegate
+  def initialize(model : Path, labels : Hash(Int32, String)? = nil, enable_tpu : Bool = true)
+    delegate = if enable_tpu && TensorflowLite::EdgeTPU.devices.size > 0
+      edge_tpu = TensorflowLite::EdgeTPU.devices[0]
+      Log.info { "EdgeTPU Found! #{edge_tpu.type}: #{edge_tpu.path}" }
+      edge_tpu.to_delegate
     end
 
     @client = TensorflowLite::Client.new(model, delegate: delegate)

@@ -1,5 +1,4 @@
 require "log"
-require "ffmpeg"
 
 module Imagine
   Log = ::Log.for("imagine")
@@ -10,4 +9,4 @@ module Imagine
 end
 
 require "./imagine/*"
-require "./imagine/tf_lite/*"
+require "./imagine/models/*"

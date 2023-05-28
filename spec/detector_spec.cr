@@ -5,13 +5,8 @@ module Imagine
     Spec.before_each do
     end
 
-    it "extracts the tensorflow model label map" do
-      labels = TFLite::ExtractLabels.from(SPEC_TF_L_MODEL)
-      labels.not_nil!.size.should eq 90
-    end
-
     it "loads a model" do
-      model = Model::ExampleObjectDetection.new(SPEC_TF_L_MODEL)
+      model = Model::TFLiteImage.new(SPEC_TF_L_MODEL)
       puts model.inspect
       model.input_resolution.should eq({300, 300})
 

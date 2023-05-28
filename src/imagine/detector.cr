@@ -83,9 +83,12 @@ class Imagine::Detector
     @video = video = FFmpeg::Video.open(@input)
     video.each_frame(input_width, input_height) do |canvas, _key_frame|
       @error = false
-      @frame = canvas
-      next if @performing_detection # skip frames as the NN is slow
+
+      # skip frames as the NN is slow
+      @state_mutex.synchronize { next if @performing_detection }
       break unless @processing && invocation == @processing_count
+
+      @frame = canvas
 
       # pass the latest frame to the neural net
       if channel = @channel

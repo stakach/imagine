@@ -10,3 +10,4 @@ libtensorflowlite_c.so
 tflite_conversions
 *.tflite
 *.mp4
+shard.lock

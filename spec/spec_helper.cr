@@ -1,7 +1,6 @@
 require "spec"
 require "http/client"
 require "../src/imagine"
-require "../src/imagine/models/example_object_detection"
 
 Spec.before_suite do
   Log.setup(:trace)

@@ -1,114 +1,108 @@
 require "./model_adaptor"
+require "./processor"
 require "stumpy_core"
 require "ffmpeg"
 require "./fps"
 
 class Imagine::Detector
-  def initialize(@input : URI | Path, @model : ModelAdaptor)
+  alias Detection = TensorflowLite::Image::ObjectDetection::Detection
+  alias Canvas = StumpyCore::Canvas
+
+  def initialize(@input : URI | Path, model : ModelAdaptor)
+    # scaling
+    input_width, input_height = model.input_resolution
+    @scaler = Processor(Canvas, Canvas).new("image scaling") do |canvas|
+      StumpyResize.scale_to_cover(canvas, input_width, input_height, :nearest_neighbor)
+    end
+
+    # ai detection invoker
+    @model = model
+    @ai_invoke = Processor(Canvas, Tuple(Canvas, Array(Detection))).new("model invocation") do |canvas|
+      model.process(canvas)
+    end
+
+    # pipe scaling into the detector
+    # no blocking, we want a detection to be as close
+    # to real-time as possible so anything we act on
+    # is as valid as possible
+    spawn do
+      loop do
+        scaled = @scaler.receive?
+        break unless scaled
+        @ai_invoke.process scaled
+      end
+    end
   end
-
-  # State of detector, stream might not always be available
-  @state_mutex : Mutex = Mutex.new
-  @processing_count : Int32 = 0
-  @performing_detection : Bool = false
-  getter? processing : Bool = false
-  getter? error : Bool = false
-  getter last_error : Exception? = nil
-
-  getter fps : FPS = FPS.new
-  @next_fps_window : FPS = FPS.new
 
   # video and NN model processing
   getter input : URI | Path
   @video : FFmpeg::Video? = nil
   getter model : ModelAdaptor
-  getter frame : StumpyCore::Canvas? = nil
-  @channel : Channel(StumpyCore::Canvas)? = nil
+
+  @scaler : Processor(Canvas, Canvas)
+  @ai_invoke : Processor(Canvas, Tuple(Canvas, Array(Detection)))
+
+  # how many detections are running
+  getter fps : FPS = FPS.new
+  @next_fps_window : FPS = FPS.new
+
+  # State of detector, stream might not always be available
+  getter? processing : Bool = false
+  getter last_error : Exception? = nil
 
   def detections
+    return if @processing
+    @processing = true
+
     @fps = FPS.new
     @next_fps_window = FPS.new
 
-    invocation = 0
-    @state_mutex.synchronize do
-      raise "already processing" if processing?
-      @processing_count += 1
-      @processing = true
-      invocation = @processing_count
-    end
-
     # start processing video based on the model requirements
-    nn_model = @model
-    input_width, input_height = nn_model.input_resolution
-    spawn { process_video(invocation, input_width, input_height) }
-    spawn { track_fps(invocation) }
+    spawn { process_video }
+    spawn { track_fps }
 
     # yield any detections
-    channel = Channel(StumpyCore::Canvas).new(1)
-    while @processing && invocation == @processing_count
-      @channel = channel
-      canvas = channel.receive
-
+    while @processing
       if @fps.operations.zero?
         @fps.reset
         @next_fps_window.reset
       end
 
-      @state_mutex.synchronize { @performing_detection = true }
-      detections = nn_model.process(canvas)
-      @state_mutex.synchronize { @performing_detection = false }
+      canvas, detections = @ai_invoke.receive
 
       @fps.increment
       @next_fps_window.increment
       yield(canvas, detections, @fps) unless detections.empty?
     end
   ensure
-    @state_mutex.synchronize do
-      @processing = false
-      @performing_detection = false
-    end
+    stop
   end
 
   def stop
-    @state_mutex.synchronize { @processing = false }
+    @scaler.stop
+    @ai_invoke.stop
+    @processing = false
   end
 
-  protected def process_video(invocation, input_width, input_height) : Nil
-    # we only want to process the video once
-    @state_mutex.synchronize do
-      return unless @processing && invocation == @processing_count
-    end
-
+  protected def process_video : Nil
     # we capture as fast as we can, we just skip running detections if they cant keep up
     @video = video = FFmpeg::Video.open(@input)
-    video.each_frame(input_width, input_height) do |canvas, _key_frame|
-      @error = false
-
-      # skip frames as the NN is slow
-      @state_mutex.synchronize { next if @performing_detection }
-      break unless @processing && invocation == @processing_count
-
-      @frame = canvas
-
-      # pass the latest frame to the neural net
-      if channel = @channel
-        @channel = nil
-        channel.send(canvas)
-      end
+    video.each_frame do |canvas, _key_frame|
+      @scaler.process canvas
+      break unless @processing
     end
   rescue error
     # stream probably not online, we'll just keep retrying
     Log.trace(exception: error) { "error extracting frame" }
     @last_error = error
-    @error = true
-    sleep 2
-    spawn { process_video(invocation, input_width, input_height) }
+    sleep 0.2
+    spawn { process_video }
   end
 
-  protected def track_fps(invocation)
+  protected def track_fps
     loop do
       sleep 5
-      break unless @processing && invocation == @processing_count
+      break unless @processing
       @fps = @next_fps_window
       @next_fps_window = FPS.new
     end

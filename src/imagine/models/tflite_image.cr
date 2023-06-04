@@ -34,8 +34,6 @@ class Imagine::Model::TFLiteImage < Imagine::ModelAdaptor
   end
 
   def process(canvas : StumpyCore::Canvas)
-    _scaled_canvas, detections = detector.run canvas
-    # adjustments are made on the frontend
-    detections
+    detector.run canvas
   end
 end

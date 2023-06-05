@@ -39,8 +39,8 @@ class Imagine::Detector
   @video : FFmpeg::Video? = nil
   getter model : ModelAdaptor
 
-  @scaler : Processor(Canvas, Canvas)
-  @ai_invoke : Processor(Canvas, Tuple(Canvas, Array(Detection)))
+  getter scaler : Processor(Canvas, Canvas)
+  getter ai_invoke : Processor(Canvas, Tuple(Canvas, Array(Detection)))
 
   # how many detections are running
   getter fps : FPS = FPS.new
@@ -72,7 +72,7 @@ class Imagine::Detector
 
       @fps.increment
       @next_fps_window.increment
-      yield(canvas, detections, @fps) unless detections.empty?
+      yield(canvas, detections, @fps, @scaler.time, @ai_invoke.time) unless detections.empty?
     end
   ensure
     stop

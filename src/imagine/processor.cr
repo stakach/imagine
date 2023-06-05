@@ -6,6 +6,7 @@ class Imagine::Processor(Input, Output)
   @work : Proc(Input, Output)
   @in : Channel(Input) = Channel(Input).new
   @out : Channel(Output) = Channel(Output).new
+  getter time : Time::Span = 0.seconds
 
   # non-blocking send
   def process(input : Input) : Bool
@@ -42,7 +43,10 @@ class Imagine::Processor(Input, Output)
       return if @in.closed?
       begin
         input = @in.receive
+        t1 = Time.monotonic
         output = @work.call input
+        t2 = Time.monotonic
+        @time = t2 - t1
         @out.send output
       rescue error
         return if @in.closed?

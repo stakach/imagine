@@ -17,7 +17,7 @@ class Imagine::Detector
 
     # ai detection invoker
     @model = model
-    @ai_invoke = Processor(Canvas, Tuple(Canvas, Array(Detection))).new("model invocation") do |canvas|
+    @ai_invoke = Processor(Canvas, Tuple(Canvas, Array(Detection))).new("model invocation", 1) do |canvas|
       model.process(canvas)
     end
 

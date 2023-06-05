@@ -1,11 +1,12 @@
 class Imagine::Processor(Input, Output)
-  def initialize(@name : String, &@work : Input -> Output)
+  def initialize(@name : String, output_capacity : Int32 = 0, &@work : Input -> Output)
+    @out = Channel(Output).new(output_capacity)
     spawn { process_loop }
   end
 
   @work : Proc(Input, Output)
   @in : Channel(Input) = Channel(Input).new
-  @out : Channel(Output) = Channel(Output).new
+  @out : Channel(Output)
   getter time : Time::Span = 0.seconds
 
   # non-blocking send

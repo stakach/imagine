@@ -50,6 +50,9 @@ class Imagine::Detector
   getter? processing : Bool = false
   getter last_error : Exception? = nil
 
+  getter frame_counter : UInt64 = 0
+  getter frame_invoked : UInt64 = 0
+
   def detections
     return if @processing
     @processing = true
@@ -72,7 +75,7 @@ class Imagine::Detector
 
       @fps.increment
       @next_fps_window.increment
-      yield(canvas, detections, @fps, @scaler.time, @ai_invoke.time) unless detections.empty?
+      yield(canvas, detections, @fps, @scaler.time, @ai_invoke.time, @frame_counter, @frame_invoked) unless detections.empty?
     end
   ensure
     stop
@@ -88,7 +91,8 @@ class Imagine::Detector
     # we capture as fast as we can, we just skip running detections if they cant keep up
     @video = video = FFmpeg::Video.open(@input)
     video.each_frame do |canvas, _key_frame|
-      @scaler.process canvas
+      @frame_counter += 1
+      @frame_invoked += 1 if @scaler.process canvas
       break unless @processing
     end
   rescue error

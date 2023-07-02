@@ -9,10 +9,17 @@ class Imagine::Detector
   alias Canvas = StumpyCore::Canvas
 
   def initialize(@input : URI | Path, model : ModelAdaptor)
+    # are we ready to receive a frame
+    @next_frame = Channel(Nil).new(1)
+
     # scaling
+    # TODO:: if no scaling required then we need to dup input canvas
+    # as the input canvas is reused once we signal for the next frame
     input_width, input_height = model.input_resolution
     @scaler = Processor(Canvas, Canvas).new("image scaling") do |canvas|
-      StumpyResize.scale_to_cover(canvas, input_width, input_height, :nearest_neighbor)
+      output = StumpyResize.scale_to_cover(canvas, input_width, input_height, :nearest_neighbor)
+      @next_frame.send nil
+      output
     end
 
     # ai detection invoker
@@ -20,9 +27,6 @@ class Imagine::Detector
     @ai_invoke = Processor(Canvas, Tuple(Canvas, Array(Detection))).new("model invocation", 1) do |canvas|
       model.process(canvas)
     end
-
-    # are we ready to receive a frame
-    @next_frame = Channel(Nil).new(1)
 
     # pipe scaling into the detector
     # no blocking, we want a detection to be as close
@@ -77,7 +81,6 @@ class Imagine::Detector
       end
 
       canvas, detections = @ai_invoke.receive
-      @next_frame.send nil
 
       @fps.increment
       @next_fps_window.increment

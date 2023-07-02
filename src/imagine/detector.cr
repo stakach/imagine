@@ -21,6 +21,9 @@ class Imagine::Detector
       model.process(canvas)
     end
 
+    # are we ready to receive a frame
+    @next_frame = Channel(Nil).new(1)
+
     # pipe scaling into the detector
     # no blocking, we want a detection to be as close
     # to real-time as possible so anything we act on
@@ -53,7 +56,7 @@ class Imagine::Detector
   getter frame_counter : UInt64 = 0
   getter frame_invoked : UInt64 = 0
 
-  def detections
+  def detections(&)
     return if @processing
     @processing = true
 
@@ -63,6 +66,8 @@ class Imagine::Detector
     # start processing video based on the model requirements
     spawn { process_video }
     spawn { track_fps }
+    @next_frame = Channel(Nil).new(1)
+    @next_frame.send nil
 
     # yield any detections
     while @processing
@@ -72,6 +77,7 @@ class Imagine::Detector
       end
 
       canvas, detections = @ai_invoke.receive
+      @next_frame.send nil
 
       @fps.increment
       @next_fps_window.increment
@@ -84,23 +90,33 @@ class Imagine::Detector
   def stop
     @scaler.stop
     @ai_invoke.stop
+    @next_frame.close
     @processing = false
   end
 
   protected def process_video : Nil
-    # we capture as fast as we can, we just skip running detections if they cant keep up
-    @video = video = FFmpeg::Video.open(@input)
-    video.each_frame do |canvas, _key_frame|
-      @frame_counter += 1
-      @frame_invoked += 1 if @scaler.process canvas
-      break unless @processing
+    data = Channel(Tuple(StumpyCore::Canvas, Bool)).new(1)
+
+    begin
+      # we capture as fast as we can, we just skip running detections if they cant keep up
+      @video = video = FFmpeg::Video.open(@input)
+      spawn { video.async_frames(@next_frame, data) }
+
+      loop do
+        frame, _key_frame = data.receive
+        @frame_counter += 1
+        @frame_invoked += 1 if @scaler.process frame
+        break unless @processing
+      end
+    rescue error
+      # stream probably not online, we'll just keep retrying
+      Log.trace(exception: error) { "error extracting frame" }
+      @last_error = error
+      sleep 0.2
+      spawn { process_video }
+    ensure
+      data.close
     end
-  rescue error
-    # stream probably not online, we'll just keep retrying
-    Log.trace(exception: error) { "error extracting frame" }
-    @last_error = error
-    sleep 0.2
-    spawn { process_video }
   end
 
   protected def track_fps

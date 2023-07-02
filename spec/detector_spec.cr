@@ -12,7 +12,7 @@ module Imagine
 
       count = 0
       detector = Detector.new(SPEC_VIDEO_FILE, model)
-      detector.detections do |frame, detections|
+      detector.detections do |_frame, detections|
         count += 1
         break if count > 20
         puts detections.inspect

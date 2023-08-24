@@ -5,7 +5,10 @@ dependencies:
   # Video stream parsing
   ffmpeg:
     github: spider-gazelle/ffmpeg
-    version: ~> 0.4
+
+  # Low latency video frames
+  v4l2:
+    github: spider-gazelle/v4l2.cr
 
   # AI image processing tools
   tflite_image:

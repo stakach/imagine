@@ -90,7 +90,7 @@ class Imagine::V4L2Detector
     video.stream do |buffer|
       if pipeline.idle?
         v4l2_frame = FFmpeg::Frame.new(format.width, format.height, :yuyv422, buffer: buffer)
-        convert.scale(v4l2_frame, rgb_frame)
+        scaler.scale(v4l2_frame, rgb_frame)
 
         # copy frame into a stumpy canvas
         canvas.pixels.size.times do |index|

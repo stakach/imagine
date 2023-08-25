@@ -83,7 +83,7 @@ class Imagine::V4L2Detector
     frame_buffer = Slice.new(pointer, pixel_components)
 
     # configure device
-    video = V4L2::Video.new(@device)
+    video = V4L2::Video.new(@input)
     video.set_format(format).request_buffers(1)
 
     # grab the frames

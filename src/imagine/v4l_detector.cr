@@ -67,7 +67,7 @@ class Imagine::V4L2Detector
 
     # calculate the resolutions and processing requirements
     desired_width, desired_height = model.input_resolution
-    output_width, output_height = FFmpeg::Video.scale_to_fit(format.width, format.height, desired_width, desired_height)
+    output_width, output_height = FFmpeg::Video.scale_to_fit(format.width.to_i, format.height.to_i, desired_width, desired_height)
     requires_cropping = desired_width != output_width || desired_height != output_height
 
     # configure the data structures

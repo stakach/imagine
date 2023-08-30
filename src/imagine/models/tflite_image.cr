@@ -6,7 +6,7 @@ require "../../imagine"
 #
 # https://github.com/spider-gazelle/tflite_image
 class Imagine::Model::TFLiteImage < Imagine::ModelAdaptor
-  def initialize(model : Path | URI, labels : URI? = nil, enable_tpu : Bool = true)
+  def initialize(model : Path | URI, labels : URI | Array(String)? = nil, enable_tpu : Bool = true)
     delegate = if enable_tpu && TensorflowLite::EdgeTPU.devices.size > 0
                  edge_tpu = TensorflowLite::EdgeTPU.devices[0]
                  Log.info { "EdgeTPU Found! #{edge_tpu.type}: #{edge_tpu.path}" }
